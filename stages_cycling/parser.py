@@ -1,8 +1,11 @@
+import io
 import typing as t
 from pathlib import Path
 
+import pandas as pd
+
 N_HEADER_LINES = 3
-COL_HEADERS = ("Miles", "MPH", "Watts", "HR", "RPM")
+COL_HEADERS = ("Time", "Miles", "MPH", "Watts", "HR", "RPM")
 
 
 def parse_stages_csv(data_file: Path) -> t.Tuple[t.List[str], t.List[str]]:
@@ -34,11 +37,28 @@ def parse_stages_csv(data_file: Path) -> t.Tuple[t.List[str], t.List[str]]:
 
             if line.startswith("KJ"):
                 # End of summary table, add to summary data & reset intermediate list
-                data_chunk.append(line.strip())  # We want to include this before we reset
+                data_chunk.append(line)  # We want to include this before we reset
                 summaries.append(data_chunk)
                 data_chunk = []
                 continue  # Already appended so we can skip the generic append
 
-            data_chunk.append(line.strip())
+            data_chunk.append(line)
 
         return stages, summaries
+
+
+def raw_stage_to_df(raw_stage: t.List[str], drop_hr: bool = True) -> pd.DataFrame:
+    """
+    Convert raw stage CSV to a Pandas DataFrame.
+
+    The heartrate column may be optionally dropped if no monitor is connected. This is dropped by
+    default.
+    """
+    df = pd.read_csv(io.StringIO("".join(raw_stage)), names=COL_HEADERS, index_col=0)
+    # Normalizes to 1900 but we only care about time
+    df.index = pd.to_datetime(df.index, format="%M:%S")
+
+    if drop_hr:
+        df.drop(columns="HR", inplace=True)
+
+    return df
