@@ -12,7 +12,8 @@ def parse_stages_csv(data_file: Path) -> t.Tuple[t.List[str], t.List[str]]:
     """
     Parse raw Stages cycle output into stage data & summaries.
 
-    Data is returned as a list of the raw strings from the output CSV file.
+    Data is returned as a list of the raw strings from the output CSV file. Newlines are retained so
+    `pandas.read_csv` can be used with io.StringIO rather than re-reading the CSV file.
 
     Parsing needs to be done manually if multiple stages are used during the ride, as the bike
     inserts the stage summaries in between the comma-separated data, so the formatting isn't uniform
@@ -55,8 +56,12 @@ def raw_stage_to_df(raw_stage: t.List[str], drop_hr: bool = True) -> pd.DataFram
     default.
     """
     df = pd.read_csv(io.StringIO("".join(raw_stage)), names=COL_HEADERS, index_col=0)
-    # Normalizes to 1900 but we only care about time
-    df.index = pd.to_datetime(df.index, format="%M:%S")
+
+    # Normalize timestamps to datetime then subtract to create a timedelta for total seconds elapsed
+    start = pd.to_datetime("00:00", format="%M:%S")
+    deltas = pd.to_datetime(df.index, format="%M:%S") - start
+    df.index = deltas.total_seconds()
+    df.rename_axis("Elapsed Seconds", inplace=True)
 
     if drop_hr:
         df.drop(columns="HR", inplace=True)
