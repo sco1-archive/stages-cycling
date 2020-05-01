@@ -72,3 +72,11 @@ def raw_stage_to_df(raw_stage: t.List[str], drop_hr: bool = True) -> pd.DataFram
         df.drop(columns="HR", inplace=True)
 
     return df
+
+
+def build_dfs(raw_stages: t.List[t.List[str]],) -> t.Tuple[t.List[pd.DataFrame], pd.DataFrame]:
+    """Generate dataframes from parsed data & create a concatenated full ride."""
+    stage_frames = [raw_stage_to_df(stage) for stage in raw_stages]
+    full_ride = pd.concat(stage_frames)
+
+    return stage_frames, full_ride
