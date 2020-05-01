@@ -44,6 +44,11 @@ def parse_stages_csv(data_file: Path) -> t.Tuple[t.List[str], t.List[str]]:
                 continue  # Already appended so we can skip the generic append
 
             data_chunk.append(line)
+        else:
+            # Catch cases where final ride summary is not output
+            # If we're in this scenario, once we get to this point there's still data in data_chunk
+            if data_chunk:
+                stages.append(data_chunk)
 
         return stages, summaries
 
