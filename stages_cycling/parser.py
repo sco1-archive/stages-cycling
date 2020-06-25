@@ -53,12 +53,12 @@ def parse_stages_csv(data_file: Path) -> t.Tuple[t.List[str], t.List[str]]:
         return stages, summaries
 
 
-def raw_stage_to_df(raw_stage: t.List[str], drop_hr: bool = True) -> pd.DataFrame:
+def raw_stage_to_df(raw_stage: t.List[str], drop_hr: bool = False) -> pd.DataFrame:
     """
     Convert raw stage CSV to a Pandas DataFrame.
 
-    The heartrate column may be optionally dropped if no monitor is connected. This is dropped by
-    default.
+    The heartrate column may be optionally dropped if no monitor is connected. This is not dropped
+    by default.
     """
     df = pd.read_csv(io.StringIO("".join(raw_stage)), names=COL_HEADERS, index_col=0)
 
