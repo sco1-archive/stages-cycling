@@ -1,3 +1,4 @@
+import datetime as dt
 import io
 import typing as t
 from pathlib import Path
@@ -61,15 +62,15 @@ def raw_stage_to_df(raw_stage: t.List[str], drop_hr: bool = False) -> pd.DataFra
     by default.
     """
     df = pd.read_csv(io.StringIO("".join(raw_stage)), names=COL_HEADERS, index_col=0)
-
-    # Normalize timestamps to datetime then subtract to create a timedelta for total seconds elapsed
-    start = pd.to_datetime("00:00", format="%M:%S")
-    deltas = pd.to_datetime(df.index, format="%M:%S") - start
-    df.index = deltas.total_seconds()
-    df.rename_axis("Elapsed Seconds", inplace=True)
-
     if drop_hr:
         df.drop(columns="HR", inplace=True)
+
+    # Convert cycle timestamps to total seconds elapsed. Some aroundfuckery is needed.
+    # The logger continues beyond 60 minutes, breaking Python's native datetime parsing, which
+    # assumes that minutes are capped at 59
+    new_idx = df.index.to_series().apply(_timestamp_convert)
+    df.index = new_idx
+    df.rename_axis("Elapsed Seconds", inplace=True)
 
     return df
 
@@ -80,3 +81,10 @@ def build_dfs(raw_stages: t.List[t.List[str]],) -> t.Tuple[t.List[pd.DataFrame],
     full_ride = pd.concat(stage_frames)
 
     return stage_frames, full_ride
+
+
+def _timestamp_convert(timestamp: str) -> int:
+    """Convert the input timestamp, provided as a `MM:SS` string, to total seconds elapsed."""
+    minutes, seconds = (int(component) for component in timestamp.split(":"))
+
+    return dt.timedelta(minutes=minutes, seconds=seconds).total_seconds()
