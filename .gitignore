@@ -9,8 +9,8 @@ build/
 dist/
 
 # Jupyter
-.ipynb_checkpoints
-*.ipynb
+.ipynb_checkpoints/
+scratch.ipynb
 
 # Environments
 .env

@@ -25,7 +25,7 @@ include = ["CHANGELOG.md"]
 python = "^3.8"
 numpy = "^1.18"
 pandas = "^1.0"
-typer = "^0.2"
+typer = "^0.3"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^19.10b0"}
